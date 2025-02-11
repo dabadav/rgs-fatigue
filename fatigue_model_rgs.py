@@ -1,23 +1,7 @@
 import numpy as np
+import pandas as pd
 import scipy.optimize as opt
 from pathlib import Path
-
-def expected_reward(prev_rewards, prev_success, lambda_r=0.7, gamma_s=0.3):
-    """
-    Compute expected reward based on past rewards and success rate.
-
-    prev_rewards: List of previous session scores.
-    prev_success: List of binary success (1 = completed, 0 = not completed).
-    lambda_r: Weight for past rewards.
-    gamma_s: Weight for past success rate.
-    """
-    if len(prev_rewards) == 0:
-        return 1  # Default small reward if no prior data
-
-    avg_reward = np.mean(prev_rewards)
-    success_rate = np.mean(prev_success)
-
-    return lambda_r * avg_reward + gamma_s * success_rate
 
 def softmax(x, beta):
     """ Compute softmax probability for binary choices """
@@ -93,13 +77,15 @@ if __name__ == "__main__":
     # Path: rgs-fatigue/fatigue_model.py
     data_path = Path("../data")
     output_path = Path("../results")
+    rgs_mode = "app"
+    data_file = data_path / f"rgs_data_{rgs_mode}_fatigue.csv"
 
     # Generate synthetic data
-    np.random.seed(42)
-    num_trials = 100
-    rewards = np.random.randint(1, 5, num_trials)
-    efforts = np.random.randint(1, 5, num_trials)
-    choices = np.random.binomial(1, 0.5, num_trials)
+    df = pd.read_csv(data_file)
+
+    rewards = df["EXPECTED_REWARD"]
+    efforts = df["SESSION_PRESCRIBED"]
+    choices = df["ADHERENCE_BINARY"]
 
     # Load rgs data and fit the model
     fitted_params = fit_model(rewards, efforts, choices)
